@@ -1,0 +1,81 @@
+ESP8266 AT指令集 简单使用介绍
+默认波特率 115200
+输入以回车换行结尾“\r\n”
+
+AT：测试AT启动
+AT+RST：重启模块
+AT+GMR：查看版本信息
+
+设置串口配置（设置后重新上电仍生效）：
+  指令：AT+CIOBAUD=<baudrate>,<databits>,<stopbits>,<parity>,<flow control>
+  参数：<baudrate> 串口波特率
+        <databits> 数据位
+                   5: 5 bit 数据位
+                   6: 6 bit 数据位
+                   7: 7 bit 数据位
+                   8: 8 bit 数据位
+        <stopbits> 停止位
+                   1: 1 bit 停止位
+                   2: 1.5 bit 停止位
+                   3: 2 bit 停止位
+        <parity> 校验位
+                 0: None
+                 1: Odd
+                 2: Even
+        <flow control> 流控
+                       0: 不使能流控
+                       1: 使能 RTS
+                       2: 使能 CTS
+                       3: 同时使能 RTS 和 CTS
+  示例，我们设置为：AT+CIOBAUD=9600,8,1,0,0
+
+更改模式：
+  AT+CWMODE=<mode>
+  参数：<mode> 1:Station模式 2:AP模式 3:AP兼Station模式
+  需重启后生效（AT+RST）
+  示例：我们设置为：AT+CWMODE=1
+
+加入AP：
+  指令：AT+CWJAP=<ssid>,<pwd>
+  参数：<ssid>字符串参数，接入点名称；<pwd>字符串参数，密码最长64字节ASCII
+  示例：AT+CWJAP="CMCC","123456"
+  返回：WIFI CONNECTED：连接到热点
+        WIFI GOT IP：分配到IP
+
+启动多路连接：
+  指令：AT+CIPMUX=<mode>
+  参数：<mode> 0:单路连接模式 1:多路连接模式
+  示例，我们设置为：AT+CIPMUX=0
+
+连接TCP服务器：
+  指令：AT+CIPSTART=<type>,<addr>,<port>
+  参数：<type>:"TCP"或"UDP"，<addr>:远程服务器IP地址，<port>远程服务器端口号
+  示例，连接OneNet：AT+CIPSTART="TCP","183.230.40.33",80
+  
+  返回：CONNECT
+        OK
+  说明连接成功
+
+设置模块传输模式：
+  指令：AT+CIPMODE=<mode>
+  <mode> 0:非透传模式 1:透传模式
+  示例，我们使用透传模式：AT+CIPMODE=1
+
+发送数据：
+  指令：AT+CIPSEND=<length> 发送指定长度的数据
+        AT+CIPSEND 进入透传模式
+        发送 +++ 退出透传模式
+
+合成POST请求的HTTP头和需要的JSON数据流示例：
+  POST /devices/25745168/datapoints HTTP/1.1
+  api-key: DkYap3u7DgYmu8x=beNR=lQd8GM=
+  Host:api.heclouds.com
+  Content-Type: application/json
+  Connection:close
+  Content-Length:60
+  
+  {"datastreams":[{"id":"SPEED","datapoints":[{"value":50}]}]}
+  
+  返回：{"errno":0,"error","succ"}
+
+
