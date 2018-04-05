@@ -6,8 +6,8 @@
 //#define DEBUG_FIXTIME     //测试时间补偿
 
 /* 晶振频率 */
-#define MAIN_Fosc   11059200UL
-//#define MAIN_Fosc   12000000UL
+//#define MAIN_Fosc   11059200UL
+#define MAIN_Fosc   12000000UL
 
 /* 七段数码管 */
 #define DIGITAL_DB P0         // 数据线
@@ -44,20 +44,23 @@ RecordType newRec = {0, 0, 0};    //最新记录值
 bit finish_flag = 0;      //脉宽捕获完成标志位
 float pulse_width = 0;    //存储脉宽值
 
-///* 共阳极七段数码管 */
-//unsigned char code table[]={
-//  //"0"   "1"   "2"   "3"   "4"   "5"   "6"   "7"   "8"   "9"   "." "OFF"
-//  0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90, 0x7f, 0xff
-//};
-
-/* 共阴极七段数码管 */
-unsigned char code table[] = {
+/*************** 共阳极七段数码管 ***************/
+unsigned char code table[]={
   //"0"   "1"   "2"   "3"   "4"   "5"   "6"   "7"   "8"   "9"   "." "OFF"
-  0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x80, 0x00
+  0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 0x80, 0x90, 0x7f, 0xff
 };
-
 /* 数码管位选值 */
-unsigned char code T_COM[] = {0xfe, 0xfd, 0xfb, 0xf7, 0xef, 0xdf, 0xbf, 0x7f};
+unsigned char code T_COM[] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+/*************** 共阳极七段数码管 ***************/
+
+///*************** 共阴极七段数码管 ***************/
+//unsigned char code table[] = {
+//  //"0"   "1"   "2"   "3"   "4"   "5"   "6"   "7"   "8"   "9"   "." "OFF"
+//  0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F, 0x80, 0x00
+//};
+///* 数码管位选值 */
+//unsigned char code T_COM[] = {0xfe, 0xfd, 0xfb, 0xf7, 0xef, 0xdf, 0xbf, 0x7f};
+///*************** 共阴极七段数码管 ***************/
 
 void display_n(char n, num, dot);
 void delay(char t) { while(t--); }
@@ -164,33 +167,34 @@ void main(void)
   }
 }
 
-/* 显示第n个数码管 */
-void display_n(char n, num, dot)
-{
-  DULA = WELA = 0;                  // 保证段选与位选关闭
-  DIGITAL_DB = T_COM[n];            // 位选值
-  WELA = 1;                         // 打开位选
-  WELA = 0;                         // 关闭位选
-  DIGITAL_DB = table[num];          // 段选值
-  if (dot) DIGITAL_DB |= table[10]; // 小数点
-  DULA = 1;                         // 打开段选
-  DULA = 0;                         // 关闭段选
-  delay(30);                         // 可以调整数码管亮度
-  DIGITAL_DB = table[11];           // 关闭数码管
-  DULA = 1;
-  DULA = 0;
-}
-
 ///* 显示第n个数码管 */
 //void display_n(char n, num, dot)
 //{
-//  P2 = T_COM[n];                //数码管位选
-//  delay(1);
-//  P0 = table[num];              //数码管段选
-//  if (dot) P0 |= table[10];     //小数点
-//  delay(10);
-//  P0 = table[11];               //关闭数码管
+//  DULA = WELA = 0;                  // 保证段选与位选关闭
+//  DIGITAL_DB = T_COM[n];            // 位选值
+//  WELA = 1;                         // 打开位选
+//  WELA = 0;                         // 关闭位选
+//  DIGITAL_DB = table[num];          // 段选值
+//  if (dot) DIGITAL_DB |= table[10]; // 小数点
+//  DULA = 1;                         // 打开段选
+//  DULA = 0;                         // 关闭段选
+//  delay(30);                         // 可以调整数码管亮度
+//  DIGITAL_DB = table[11];           // 关闭数码管
+//  DULA = 1;
+//  DULA = 0;
 //}
+
+/* 显示第n个数码管 */
+void display_n(char n, num, dot)
+{
+  P2 = T_COM[n];                //数码管位选
+  delay(1);
+  P0 = table[num];              //数码管段选
+//  if (dot) P0 |= table[10];     //小数点（共阴极）
+  if (dot) P0 &= table[10];     //小数点（共阳极）
+  delay(30);
+  P0 = table[11];               //关闭数码管
+}
 
 /* 外部中断服务函数 */
 void exint0() interrupt 0
